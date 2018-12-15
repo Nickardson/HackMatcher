@@ -3,6 +3,10 @@
     public enum Operation
     {
         GRAB_OR_DROP,
+        // TODO: implement PUT
+        PUT,
+        // TODO: implement TAKE
+        TAKE,
         SWAP
     }
 

@@ -4,13 +4,54 @@ using System.Text;
 
 namespace HackMatcher
 {
-    public class State {
+    public class State
+    {
+        public const int MaxRows = 9;
+        public const int MaxCols = 7;
+
         static readonly int[][] NEIGHBORS = { new int[] { -1, 0 }, new int[] { 1, 0 }, new int[] { 0, -1 }, new int[] { 0, 1 } };
         static StringBuilder sb = new StringBuilder();
-        Piece[,] board;
+        public Piece[,] board;
         public Piece held;
         public bool hasMatch;
         private int hashCode;
+
+        /// <summary>
+        /// Determine the number of blocks in the given column
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        public int GetCountInColumn(int column)
+        {
+            for (int row = 0; row < MaxRows; row++)
+            {
+                if (board[column, row] == null)
+                {
+                    return row;
+                }
+            }
+
+            return MaxRows;
+        }
+
+        /// <summary>
+        /// Gets the number of blocks in the board, also counting the held item if any
+        /// </summary>
+        /// <returns></returns>
+        public int GetItemCount()
+        {
+            int count = held != null ? 1 : 0;
+
+            foreach (var col in board)
+            {
+                if (col != null)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
 
         public State(Piece[,] board, Piece held) {
             this.board = board;

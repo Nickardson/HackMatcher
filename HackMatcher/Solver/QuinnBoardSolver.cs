@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace HackMatcher.Solver
 {
+    /// <summary>
+    /// Original solver by https://github.com/thquinn
+    /// </summary>
     public class QuinnBoardSolver : IBoardSolver
     {
         public IEnumerable<Move> FindMoves(State state, out bool hasMatch)

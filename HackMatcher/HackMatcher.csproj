@@ -65,6 +65,7 @@
     <Compile Include="CV.cs" />
     <Compile Include="Move.cs" />
     <Compile Include="Piece.cs" />
+    <Compile Include="Solver\FidelBoardSolver.cs" />
     <Compile Include="Solver\IBoardSolver.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
