@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using HackMatcher.Solver;
 
 namespace HackMatcher {
     class Program {
@@ -34,6 +35,8 @@ namespace HackMatcher {
             }
             Util32.ForegroundWindow();
 
+            IBoardSolver solver = new QuinnBoardSolver();
+
             while (true) {
                 State state = null;
                 Color heldColor = Color.White;
@@ -51,8 +54,8 @@ namespace HackMatcher {
                     heldColor = new Bitmap(image).GetPixel(320, 610);
                 }
                 Console.WriteLine("Holding: " + state.held);
-                List<Move> moves = FindMoves(state, out bool hasMatch);
-                if (moves == null) {
+                var moves = solver.FindMoves(state, out bool hasMatch).ToList();
+                if (!moves.Any()) {
                     continue;
                 }
                 
@@ -65,53 +68,6 @@ namespace HackMatcher {
                     Thread.Sleep(500);
                 }
             }
-        }
-
-        static List<Move> FindMoves(State state, out bool hasMatch) {
-            hasMatch = false;
-            Console.WriteLine("Searching for a move...");
-            Queue<State> queue = new Queue<State>();
-            Dictionary<State, Tuple<State, Move>> parents = new Dictionary<State, Tuple<State, Move>>();
-            queue.Enqueue(state);
-            double maxEval = double.MinValue;
-            State maxState = null;
-            while (queue.Count > 0 && parents.Count < 25000) {
-                State current = queue.Dequeue();
-                Dictionary<Move, State> children = current.GetChildren();
-                foreach (KeyValuePair<Move, State> child in children) {
-                    if (parents.ContainsKey(child.Value)) {
-                        continue;
-                    }
-                    parents.Add(child.Value, new Tuple<State, Move>(current, child.Key));
-                    if (parents.Count % 25000 == 0) {
-                        Console.WriteLine("Searched " + parents.Count + " states.");
-                    }
-                    queue.Enqueue(child.Value);
-                    // Check eval.
-                    double eval = child.Value.Eval();
-                    eval -= parents.Count / 10000000f;
-                    if (eval > maxEval) {
-                        maxEval = eval;
-                        maxState = child.Value;
-                    }
-                }
-            }
-            Console.WriteLine("Best eval: " + maxEval);
-            List<Move> moves = new List<Move>();
-            if (maxState == null) {
-                moves.Add(new Move(Operation.GRAB_OR_DROP, 0));
-                return moves;
-            }
-            while (parents.ContainsKey(maxState)) {
-                Tuple<State, Move> parent = parents[maxState];
-                moves.Add(parent.Item2);
-                maxState = parent.Item1;
-            }
-            moves.Reverse();
-            if (maxState.hasMatch) {
-                hasMatch = true;
-            }
-            return moves;
         }
     }
 
