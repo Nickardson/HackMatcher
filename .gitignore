@@ -29,3 +29,5 @@ $RECYCLE.BIN/
 !**/packages/OpenCvSharp*
 *.suo
 .vs
+*.vsps
+*.vspx

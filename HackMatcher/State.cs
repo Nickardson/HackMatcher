@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace HackMatcher
@@ -95,6 +96,8 @@ namespace HackMatcher
         public double Eval() {
             hasMatch = false;
             double eval = 0;
+            
+            // make a checklist of all non-empty pieces
             HashSet<Tuple<int, int>> toCheck = new HashSet<Tuple<int, int>>();
             for (int x = 0; x < 7; x++) {
                 for (int y = 0; y < board.GetLength(1); y++) {
@@ -104,41 +107,70 @@ namespace HackMatcher
                     toCheck.Add(new Tuple<int, int>(x, y));
                 }
             }
-            while (toCheck.Count > 3) {
-                var enumerator = toCheck.GetEnumerator();
-                enumerator.MoveNext();
-                Tuple<int, int> start = enumerator.Current;
+
+            bool[,] hasAlreadyUsed = new bool[board.GetLength(0), board.GetLength(1)];
+
+            // while there are at least 4 pieces, we could find a match somewhere.
+            while (toCheck.Count >= 4) {
+                // start looking at the next candidate.
+                Tuple<int, int> start = toCheck.First();
+                toCheck.Remove(start);
+                hasAlreadyUsed[start.Item1, start.Item2] = true;
+
+                // create a queue of items to check
                 bool match = false;
                 Queue<Tuple<int, int>> queue = new Queue<Tuple<int, int>>();
                 queue.Enqueue(start);
-                toCheck.Remove(start);
 
                 // determine how many are already connected
                 int count = 1;
-                while (queue.Count > 0) {
+                while (queue.Any()) {
+                    // look at the next piece in the queue
                     Tuple<int, int> current = queue.Dequeue();
-                    foreach (int[] coor in NEIGHBORS) {
-                        Tuple<int, int> neighbor = new Tuple<int, int>(current.Item1 + coor[0], current.Item2 + coor[1]);
-                        if (neighbor.Item1 < 0 || neighbor.Item1 >= 7) {
+
+                    // and check each neighbor
+                    foreach (int[] coor in NEIGHBORS)
+                    {
+                        // determine where the neighbor is
+                        var neighborX = current.Item1 + coor[0];
+                        var neighborY = current.Item2 + coor[1];
+
+                        // check if that neighbor is in bounds
+                        if (neighborX < 0 || neighborX >= 7) {
                             continue;
                         }
-                        if (neighbor.Item2 < 0 || neighbor.Item2 >= board.GetLength(1)) {
+                        if (neighborY < 0 || neighborY >= board.GetLength(1)) {
                             continue;
                         }
-                        if (!toCheck.Contains(neighbor)) {
+                        
+                        if (board[neighborX, neighborY] == null)
+                        {
                             continue;
                         }
-                        if (board[neighbor.Item1, neighbor.Item2].color != board[start.Item1, start.Item2].color) {
+
+                        // ensure we haven't already counted this neighbor as part of something else
+                        if (hasAlreadyUsed[neighborX, neighborY])
+                        {
                             continue;
                         }
-                        if (board[neighbor.Item1, neighbor.Item2].bomb != board[start.Item1, start.Item2].bomb) {
+
+                        // check that the neighbor is compatible with the initial piece
+                        if (board[neighborX, neighborY].color != board[start.Item1, start.Item2].color) {
                             continue;
                         }
+                        if (board[neighborX, neighborY].bomb != board[start.Item1, start.Item2].bomb) {
+                            continue;
+                        }
+
+                        // we have a contiguous piece!
                         count++;
                         if (count >= (board[start.Item1, start.Item2].bomb ? 2 : 4)) {
                             match = true;
                             hasMatch = true;
                         }
+
+                        Tuple<int, int> neighbor = new Tuple<int, int>(neighborX, neighborY);
+                        hasAlreadyUsed[neighborX, neighborY] = true;
                         queue.Enqueue(neighbor);
                         toCheck.Remove(neighbor);
                     }
@@ -227,20 +259,6 @@ namespace HackMatcher
                 CalculateHashCode();
             }
             return hashCode;
-        }
-
-        protected bool Equals(State other)
-        {
-            // TODO: this is surely not very performant.
-            return Equals(board.ToString(), other.board.ToString()) && Equals(held, other.held);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((State)obj);
         }
     }
 }
