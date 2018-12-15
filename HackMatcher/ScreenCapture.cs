@@ -51,6 +51,26 @@ namespace HackMatcher {
 
             return img;
         }
+
+        public static Bitmap CaptureWindowV2(IntPtr handle)
+        {
+            var rect = new User32.RECT();
+            User32.GetWindowRect(handle, ref rect);
+
+            //var clientRect = new User32.RECT();
+            //User32.GetClientRect(handle, ref clientRect);
+
+            var bounds = new Rectangle(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+            
+            var result = new Bitmap(bounds.Width, bounds.Height);
+            using (var g = Graphics.FromImage(result))
+            {
+                g.CopyFromScreen(new Point(bounds.Left, bounds.Top), Point.Empty, bounds.Size);
+            }
+
+            return result;
+        }
+
         public static Image CaptureWindow(string windowName) {
             IntPtr hWnd = User32.FindWindow(windowName, null);
             return CaptureWindow(hWnd);
@@ -123,6 +143,8 @@ namespace HackMatcher {
             public static extern IntPtr GetClientRect(IntPtr hWnd, ref RECT rect);
             [DllImport("user32.dll")]
             public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+            [DllImport("user32.dll")]
+            public static extern IntPtr GetWindowRect(IntPtr hWnd, ref RECT rect);
         }
 
 

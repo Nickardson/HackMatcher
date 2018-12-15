@@ -38,8 +38,8 @@ namespace HackMatcher {
                 State state = null;
                 Color heldColor = Color.White;
                 while (state == null) {
-                    //Image image = Image.FromFile("last.png");
-                    Image image = ScreenCapture.CaptureWindow(hWnd);
+                    //var image = Image.FromFile("last.png");
+                    var image = ScreenCapture.CaptureWindowV2(hWnd);
                     Bitmap bitmap = new Bitmap(360, 540, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                     using (Graphics g = Graphics.FromImage(bitmap)) {
                         Rectangle srcRect = new Rectangle(312, 110, 360, 540);
