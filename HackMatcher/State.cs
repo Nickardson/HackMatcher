@@ -97,89 +97,106 @@ namespace HackMatcher
             hasMatch = false;
             double eval = 0;
             
-            // make a checklist of all non-empty pieces
-            HashSet<Tuple<int, int>> toCheck = new HashSet<Tuple<int, int>>();
-            for (int x = 0; x < 7; x++) {
-                for (int y = 0; y < board.GetLength(1); y++) {
-                    if (board[x, y] == null) {
-                        break;
-                    }
-                    toCheck.Add(new Tuple<int, int>(x, y));
-                }
-            }
+            bool[,] hasAlreadyConsidered = new bool[board.GetLength(0), board.GetLength(1)];
 
-            bool[,] hasAlreadyUsed = new bool[board.GetLength(0), board.GetLength(1)];
-
-            // while there are at least 4 pieces, we could find a match somewhere.
-            while (toCheck.Count >= 4) {
-                // start looking at the next candidate.
-                Tuple<int, int> start = toCheck.First();
-                toCheck.Remove(start);
-                hasAlreadyUsed[start.Item1, start.Item2] = true;
-
-                // create a queue of items to check
-                bool match = false;
-                Queue<Tuple<int, int>> queue = new Queue<Tuple<int, int>>();
-                queue.Enqueue(start);
-
-                // determine how many are already connected
-                int count = 1;
-                while (queue.Any()) {
-                    // look at the next piece in the queue
-                    Tuple<int, int> current = queue.Dequeue();
-
-                    // and check each neighbor
-                    foreach (int[] coor in NEIGHBORS)
+            // we've already 'considered' any piece that's blank by default.
+            for (int x = 0; x < State.MaxCols; x++)
+            {
+                for (int y = 0; y < board.GetLength(1); y++)
+                {
+                    if (board[x, y] == null)
                     {
-                        // determine where the neighbor is
-                        var neighborX = current.Item1 + coor[0];
-                        var neighborY = current.Item2 + coor[1];
-
-                        // check if that neighbor is in bounds
-                        if (neighborX < 0 || neighborX >= 7) {
-                            continue;
-                        }
-                        if (neighborY < 0 || neighborY >= board.GetLength(1)) {
-                            continue;
-                        }
-                        
-                        if (board[neighborX, neighborY] == null)
-                        {
-                            continue;
-                        }
-
-                        // ensure we haven't already counted this neighbor as part of something else
-                        if (hasAlreadyUsed[neighborX, neighborY])
-                        {
-                            continue;
-                        }
-
-                        // check that the neighbor is compatible with the initial piece
-                        if (board[neighborX, neighborY].color != board[start.Item1, start.Item2].color) {
-                            continue;
-                        }
-                        if (board[neighborX, neighborY].bomb != board[start.Item1, start.Item2].bomb) {
-                            continue;
-                        }
-
-                        // we have a contiguous piece!
-                        count++;
-                        if (count >= (board[start.Item1, start.Item2].bomb ? 2 : 4)) {
-                            match = true;
-                            hasMatch = true;
-                        }
-
-                        Tuple<int, int> neighbor = new Tuple<int, int>(neighborX, neighborY);
-                        hasAlreadyUsed[neighborX, neighborY] = true;
-                        queue.Enqueue(neighbor);
-                        toCheck.Remove(neighbor);
+                        hasAlreadyConsidered[x, y] = true;
                     }
                 }
-                eval += count * count;
-                if (match) {
-                    eval += 1000;
+            }
+
+            // start checking each square.
+            for (int x = 0; x < State.MaxCols; x++)
+            {
+                for (int y = 0; y < board.GetLength(1); y++)
+                {
+                    // anything we've considered already (as a neighbor or because it's blank), we skip
+                    if (hasAlreadyConsidered[x, y])
+                    {
+                        continue;
+                    }
+
+                    // start looking at the next candidate.
+                    Tuple<int, int> start = new Tuple<int, int>(x, y);
+                    hasAlreadyConsidered[start.Item1, start.Item2] = true;
+
+                    // create a queue of items to check
+                    bool match = false;
+                    Queue<Tuple<int, int>> queue = new Queue<Tuple<int, int>>();
+                    queue.Enqueue(start);
+
+                    // determine how many are already connected
+                    int count = 1;
+                    while (queue.Any())
+                    {
+                        // look at the next piece in the queue
+                        Tuple<int, int> current = queue.Dequeue();
+
+                        // and check each neighbor
+                        foreach (int[] coor in NEIGHBORS)
+                        {
+                            // determine where the neighbor is
+                            var neighborX = current.Item1 + coor[0];
+                            var neighborY = current.Item2 + coor[1];
+
+                            // check if that neighbor is in bounds
+                            if (neighborX < 0 || neighborX >= 7)
+                            {
+                                continue;
+                            }
+                            if (neighborY < 0 || neighborY >= board.GetLength(1))
+                            {
+                                continue;
+                            }
+
+                            if (board[neighborX, neighborY] == null)
+                            {
+                                continue;
+                            }
+
+                            // ensure we haven't already counted this neighbor as part of something else
+                            if (hasAlreadyConsidered[neighborX, neighborY])
+                            {
+                                continue;
+                            }
+
+                            // check that the neighbor is compatible with the initial piece
+                            if (board[neighborX, neighborY].color != board[start.Item1, start.Item2].color)
+                            {
+                                continue;
+                            }
+                            if (board[neighborX, neighborY].bomb != board[start.Item1, start.Item2].bomb)
+                            {
+                                continue;
+                            }
+
+                            // we have a contiguous piece!
+                            count++;
+                            if (count >= (board[start.Item1, start.Item2].bomb ? 2 : 4))
+                            {
+                                match = true;
+                                hasMatch = true;
+                            }
+
+                            Tuple<int, int> neighbor = new Tuple<int, int>(neighborX, neighborY);
+                            hasAlreadyConsidered[neighborX, neighborY] = true;
+                            queue.Enqueue(neighbor);
+                        }
+                    }
+                    eval += count * count;
+                    if (match)
+                    {
+                        eval += 1000;
+                    }
                 }
             }
+
             for (int x = 0; x < 7; x++) {
                 int y = board.GetLength(1) - 1;
                 while (y > 0 && board[x, y] == null) {
