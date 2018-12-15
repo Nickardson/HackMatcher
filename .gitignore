@@ -22,7 +22,10 @@ $RECYCLE.BIN/
 # Operating System Files
 # =========================
 
-HackMatcher/bin
-HackMatcher/obj
+**/bin
+**/obj
+**/packages/*
+!**/packages/InputSimulatorPlus*
+!**/packages/OpenCvSharp*
 *.suo
 .vs

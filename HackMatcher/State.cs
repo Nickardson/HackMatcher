@@ -228,5 +228,19 @@ namespace HackMatcher
             }
             return hashCode;
         }
+
+        protected bool Equals(State other)
+        {
+            // TODO: this is surely not very performant.
+            return Equals(board.ToString(), other.board.ToString()) && Equals(held, other.held);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((State)obj);
+        }
     }
 }
