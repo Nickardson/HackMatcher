@@ -147,7 +147,7 @@ namespace HackMatcher {
     }
 
     public class State {
-        static int[][] NEIGHBORS = new int[][] { new int[] { -1, 0 }, new int[] { 1, 0 }, new int[] { 0, -1 }, new int[] { 0, 1 } };
+        static readonly int[][] NEIGHBORS = { new int[] { -1, 0 }, new int[] { 1, 0 }, new int[] { 0, -1 }, new int[] { 0, 1 } };
         static StringBuilder sb = new StringBuilder();
         Piece[,] board;
         public Piece held;
@@ -189,6 +189,10 @@ namespace HackMatcher {
             }
         }
 
+        /// <summary>
+        /// Determine a viability score for this state.
+        /// </summary>
+        /// <returns></returns>
         public double Eval() {
             hasMatch = false;
             double eval = 0;
@@ -205,11 +209,13 @@ namespace HackMatcher {
                 var enumerator = toCheck.GetEnumerator();
                 enumerator.MoveNext();
                 Tuple<int, int> start = enumerator.Current;
-                int count = 1;
                 bool match = false;
                 Queue<Tuple<int, int>> queue = new Queue<Tuple<int, int>>();
                 queue.Enqueue(start);
                 toCheck.Remove(start);
+
+                // determine how many are already connected
+                int count = 1;
                 while (queue.Count > 0) {
                     Tuple<int, int> current = queue.Dequeue();
                     foreach (int[] coor in NEIGHBORS) {
@@ -326,8 +332,8 @@ namespace HackMatcher {
     }
 
     public struct Move {
-        public Operation operation;
-        public int col;
+        public readonly Operation operation;
+        public readonly int col;
 
         public Move(Operation operation, int col) {
             this.operation = operation;
@@ -342,5 +348,9 @@ namespace HackMatcher {
         }
     }
 
-    public enum Operation { GRAB_OR_DROP, SWAP };
+    public enum Operation
+    {
+        GRAB_OR_DROP,
+        SWAP
+    };
 }
